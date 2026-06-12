@@ -883,6 +883,54 @@ def _safe_extract(tar: tarfile.TarFile, dest: str) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# extract / diff
+# --------------------------------------------------------------------------- #
+
+def extract_bundle(bundle_path: str, dest: str,
+                   verify: bool = True) -> Dict[str, Any]:
+    """Unpack a bundle to ``dest`` (path-traversal-safe). Optionally verify first.
+
+    Returns {dest, extracted, verified}. Raises on a failed verification.
+    """
+    if not os.path.isfile(bundle_path):
+        raise AirlockError(f"bundle not found: {bundle_path}")
+    if verify:
+        res = verify_bundle(bundle_path)
+        if not res["ok"]:
+            raise AirlockError(
+                f"refusing to extract: integrity check failed "
+                f"({len(res['problems'])} problem(s))")
+    os.makedirs(dest, exist_ok=True)
+    count = 0
+    with tarfile.open(bundle_path, "r") as tar:
+        _safe_extract(tar, dest)
+        count = len([m for m in tar.getmembers() if m.isfile()])
+    return {"dest": dest, "extracted": count, "verified": verify}
+
+
+def diff_bundles(bundle_a: str, bundle_b: str) -> Dict[str, Any]:
+    """Diff two bundles by their artifact index (added / removed / changed).
+
+    Compares the artifact name -> sha256 maps from each bundle's manifest.
+    """
+    ma = _read_bundle_meta(bundle_a)
+    mb = _read_bundle_meta(bundle_b)
+    amap = {a["name"]: a.get("sha256", "") for a in ma.get("artifacts", [])}
+    bmap = {a["name"]: a.get("sha256", "") for a in mb.get("artifacts", [])}
+    added = sorted(set(bmap) - set(amap))
+    removed = sorted(set(amap) - set(bmap))
+    changed = sorted(n for n in (set(amap) & set(bmap)) if amap[n] != bmap[n])
+    return {
+        "a": {"name": ma.get("name"), "version": ma.get("version"),
+              "merkle_root": ma.get("merkle_root")},
+        "b": {"name": mb.get("name"), "version": mb.get("version"),
+              "merkle_root": mb.get("merkle_root")},
+        "added": added, "removed": removed, "changed": changed,
+        "identical": not (added or removed or changed),
+    }
+
+
+# --------------------------------------------------------------------------- #
 # AI draft hook (opt-in, default OFF)
 # --------------------------------------------------------------------------- #
 

@@ -164,6 +164,17 @@ def _build_parser() -> argparse.ArgumentParser:
                    help="Enable the local-fleet LLM hook (default OFF: scaffold only).")
     a.add_argument("--out", help="Write the drafted manifest to this file.")
 
+    ex = sub.add_parser("extract", help="Unpack a bundle to a directory (verified).")
+    ex.add_argument("bundle")
+    ex.add_argument("dest")
+    ex.add_argument("--no-verify", action="store_true",
+                    help="Skip the integrity check before extracting.")
+
+    df = sub.add_parser("diff", help="Diff two bundles by their artifact index.")
+    df.add_argument("bundle_a")
+    df.add_argument("bundle_b")
+    df.add_argument("--format", choices=("table", "json"), default="table")
+
     sub.add_parser("mcp", help="Run as an MCP server (stdio JSON-RPC).")
     return p
 
@@ -247,6 +258,43 @@ def _run_draft(args) -> int:
     return 0
 
 
+def _run_extract(args) -> int:
+    from airlock import extract_bundle
+    try:
+        res = extract_bundle(args.bundle, args.dest, verify=not args.no_verify)
+    except (OSError, AirlockError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"airlock extract — {res['extracted']} file(s) -> {res['dest']}"
+          + ("  (verified)" if res["verified"] else ""))
+    return 0
+
+
+def _run_diff(args) -> int:
+    from airlock import diff_bundles
+    try:
+        d = diff_bundles(args.bundle_a, args.bundle_b)
+    except (OSError, AirlockError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if args.format == "json":
+        print(json.dumps(d, indent=2))
+    else:
+        print(f"airlock diff — {d['a']['name']} v{d['a']['version']}  vs  "
+              f"{d['b']['name']} v{d['b']['version']}")
+        print("=" * 64)
+        for n in d["added"]:
+            print(f"  + {n}")
+        for n in d["removed"]:
+            print(f"  - {n}")
+        for n in d["changed"]:
+            print(f"  ~ {n}  (content changed)")
+        print("-" * 64)
+        print("IDENTICAL" if d["identical"]
+              else f"+{len(d['added'])} -{len(d['removed'])} ~{len(d['changed'])}")
+    return 0
+
+
 def _run_mcp() -> int:
     from airlock.mcp_server import run_mcp_server
     run_mcp_server()
@@ -266,6 +314,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _run_deploy(args)
     if args.command == "draft":
         return _run_draft(args)
+    if args.command == "extract":
+        return _run_extract(args)
+    if args.command == "diff":
+        return _run_diff(args)
     if args.command == "mcp":
         return _run_mcp()
     parser.print_help(sys.stderr)
