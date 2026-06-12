@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-edge
+  labels:
+    app: hello-edge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-edge
+  template:
+    metadata:
+      labels:
+        app: hello-edge
+    spec:
+      containers:
+        - name: web
+          image: localhost:5000/cognis-digital/hello-edge:1.2.0
+          ports:
+            - containerPort: 8080

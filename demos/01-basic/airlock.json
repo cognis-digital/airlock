@@ -1,0 +1,11 @@
+{
+  "name": "hello-edge",
+  "version": "1.2.0",
+  "description": "JSON form of the same bundle, for tooling that prefers JSON.",
+  "images": ["nginx:1.27-alpine", {"ref": "ghcr.io/cognis-digital/hello-edge:1.2.0"}],
+  "charts": [
+    {"name": "redis", "repo": "https://charts.bitnami.com/bitnami", "version": "19.6.4", "release": "cache"}
+  ],
+  "manifests": ["manifests/deployment.yaml", "manifests/service.yaml"],
+  "files": ["sample-files/config.env", "sample-files/runbook.md"]
+}

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-edge
+spec:
+  selector:
+    app: hello-edge
+  ports:
+    - port: 80
+      targetPort: 8080

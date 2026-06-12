@@ -1,0 +1,29 @@
+# airlock.yaml — declarative air-gap bundle for a small web app.
+# Everything declared here is gathered into ONE verifiable bundle.tar that can
+# be carried across an air-gap and replayed into a disconnected cluster.
+name: hello-edge
+version: 1.2.0
+description: A minimal web app shipped fully offline into a disconnected cluster.
+
+# OCI images. With docker/oras on PATH these are pulled + saved; offline, their
+# intent is recorded so the far side knows exactly what to load.
+images:
+  - nginx:1.27-alpine
+  - ref: ghcr.io/cognis-digital/hello-edge:1.2.0
+
+# Helm charts (name + repo + version). Pulled via helm when available.
+charts:
+  - name: redis
+    repo: https://charts.bitnami.com/bitnami
+    version: 19.6.4
+    release: cache
+
+# Raw Kubernetes manifests to kubectl apply on the far side.
+manifests:
+  - manifests/deployment.yaml
+  - manifests/service.yaml
+
+# Arbitrary files to carry along (configs, licenses, runbooks…).
+files:
+  - sample-files/config.env
+  - sample-files/runbook.md
