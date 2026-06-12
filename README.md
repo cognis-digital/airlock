@@ -33,7 +33,7 @@ images:
 
 charts:
   - name: redis
-    repo: https://charts.bitnami.com/bitnami
+    repo: https://charts.example.com/stable
     version: 19.6.4
     release: cache
 
