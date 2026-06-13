@@ -132,3 +132,31 @@ packager but contains no third-party code, names, or branding.
 
 Part of the **Cognis Neural Suite** — 300+ source-available tools organized across 12 domains under the JTF MERIDIAN command structure. See the [suite on GitHub](https://github.com/cognis-digital) and [jtf-meridian](https://github.com/cognis-digital/jtf-meridian) for how the pieces fit together.
 <!-- cognis:domains:end -->
+
+## Usage — step by step
+
+`airlock` bundles OCI images, Helm charts, and manifests into one verifiable archive you can carry to a disconnected cluster.
+
+1. **Install** (pure stdlib, Python 3.10+):
+   ```bash
+   pip install "git+https://github.com/cognis-digital/airlock.git"
+   ```
+2. **Create a bundle** from an `airlock.yaml` manifest (`--no-pull` records intent without shelling out to docker/helm):
+   ```bash
+   airlock create airlock.yaml -o bundle.tar
+   ```
+3. **Inspect and verify** the archive — contents, sizes, hashes, and a recompute of every artifact's sha256 against the Merkle root:
+   ```bash
+   airlock inspect bundle.tar
+   airlock verify  bundle.tar
+   ```
+4. **Deploy on the far side** — preview the docker/helm/kubectl commands first, then run against the in-cluster registry/namespace:
+   ```bash
+   airlock deploy bundle.tar --dry-run
+   airlock deploy bundle.tar --registry localhost:5000 --namespace prod
+   ```
+5. **Automate** — gate CI on `verify`, or diff two bundles by their artifact index across releases:
+   ```bash
+   airlock verify bundle.tar --format json && airlock diff old.tar bundle.tar
+   ```
+   Or run it as a local MCP server (stdio JSON-RPC): `airlock mcp`.
