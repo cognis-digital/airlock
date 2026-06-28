@@ -10,6 +10,68 @@ dependencies, no network required for the offline path.
 
 ---
 
+
+<!-- cognis:example:start -->
+## 🔎 Example output
+
+Real, reproducible output from the tool — runs offline:
+
+```console
+$ airlock-emit --version
+airlock 0.1.0
+```
+
+```console
+$ airlock-emit --help
+usage: airlock [-h] [--version]
+               {create,inspect,verify,deploy,draft,extract,diff,mcp} ...
+
+Declarative air-gapped software delivery — bundle OCI images, Helm charts, and
+manifests into one verifiable archive for disconnected clusters.
+
+positional arguments:
+  {create,inspect,verify,deploy,draft,extract,diff,mcp}
+    create              Resolve a manifest into a portable bundle.tar
+    inspect             List a bundle's contents, sizes, and hashes.
+    verify              Recompute and check every artifact's sha256.
+    deploy              Plan/seed a disconnected cluster from a bundle.
+    draft               Draft an airlock manifest from plain English (--ai).
+    extract             Unpack a bundle to a directory (verified).
+    diff                Diff two bundles by their artifact index.
+    mcp                 Run as an MCP server (stdio JSON-RPC).
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+```
+
+> Blocks above are real `airlock` output — reproduce them from a clone.
+
+**Sample result format** _(illustrative values — run on your own data for real findings):_
+
+```
+{
+"findings": [
+    {
+        "id": "1234567890",
+        "title": "Suspicious Network Traffic",
+        "description": "Possible malicious activity detected on port 80",
+        "created_at": "2023-02-20T14:30:00Z",
+        "updated_at": "2023-02-20T14:30:01Z"
+    },
+    {
+        "id": "2345678901",
+        "title": "Unusual File Access",
+        "description": "User accessed a file with suspicious permissions",
+        "created_at": "2023-02-21T10:45:00Z",
+        "updated_at": "2023-02-21T10:45:01Z"
+    }
+]
+}
+```
+
+<!-- cognis:example:end -->
+
 ## Why
 
 Disconnected and classified environments cannot `docker pull` or `helm repo

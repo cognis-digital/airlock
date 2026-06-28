@@ -1,0 +1,3 @@
+$ airlock-emit --version
+
+airlock 0.1.0
